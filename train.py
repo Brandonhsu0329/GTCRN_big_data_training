@@ -4,6 +4,7 @@ import random
 import shutil
 import argparse
 import numpy as np
+import pandas as pd
 from datetime import datetime
 from pathlib import Path
 from omegaconf import OmegaConf
@@ -18,7 +19,7 @@ from distributed_utils import reduce_value
 
 from models.gtcrn_end2end import GTCRN as Model
 from loss_factory import HybridLoss as Loss
-from dataloader_dns3 import DNS3Dataset as Dataset
+from dataloader_custom import CustomDataset as Dataset  # 使用自定義 dataloader
 from scheduler import LinearWarmupCosineAnnealingLR as WarmupLR
 
 seed = 43
@@ -140,6 +141,15 @@ class Trainer:
 
         self.start_epoch = 1
         self.best_score = 0
+        
+        # 初始化訓練歷史記錄（用於CSV和繪圖）
+        self.train_history = {
+            'epoch': [],
+            'train_loss': [],
+            'val_loss': [],
+            'pesq': [],
+            'lr': []
+        }
 
         if self.resume:
             self._resume_checkpoint()
@@ -213,6 +223,8 @@ class Trainer:
         if self.rank == 0:
             self.writer.add_scalars('lr', {'lr': self.optimizer.param_groups[0]['lr']}, epoch)
             self.writer.add_scalars('train_loss', {'train_loss': total_loss / step}, epoch)
+        
+        return total_loss / step
 
 
     @torch.inference_mode()
@@ -278,10 +290,24 @@ class Trainer:
                 self.train_sampler.set_epoch(epoch)
 
             self._set_train_mode()
-            self._train_epoch(epoch)
+            train_loss = self._train_epoch(epoch)
 
             self._set_eval_mode()
             valid_loss, score = self._validation_epoch(epoch)
+            
+            # 記錄訓練歷史
+            if self.rank == 0:
+                self.train_history['epoch'].append(epoch)
+                # 將張量轉換為 Python float 以便保存和繪圖
+                self.train_history['train_loss'].append(float(train_loss) if isinstance(train_loss, torch.Tensor) else train_loss)
+                self.train_history['val_loss'].append(float(valid_loss) if isinstance(valid_loss, torch.Tensor) else valid_loss)
+                self.train_history['pesq'].append(float(score) if isinstance(score, torch.Tensor) else score)
+                self.train_history['lr'].append(self.optimizer.param_groups[0]['lr'])
+                
+                # 每個 epoch 都保存 CSV
+                df = pd.DataFrame(self.train_history)
+                csv_path = os.path.join(self.exp_path, 'training_history.csv')
+                df.to_csv(csv_path, index=False)
             
             if self.config['scheduler']['update_interval'] == 'epoch':
                 if self.config['scheduler']['use_plateau']:
@@ -297,7 +323,66 @@ class Trainer:
                     os.path.join(self.checkpoint_path,
                     'best_model_{}.tar'.format(str(self.state_dict_best['epoch']).zfill(3))))
 
+            # 訓練結束後生成 loss 圖
+            self._plot_training_curves()
+            
             print('------------Training for {} epochs is done!------------'.format(self.epochs))
+    
+    def _plot_training_curves(self):
+        """生成訓練過程的 loss 和 PESQ 圖表"""
+        import matplotlib.pyplot as plt
+        
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        fig.suptitle('Training History', fontsize=16)
+        
+        epochs = self.train_history['epoch']
+        
+        # 1. Training & Validation Loss
+        axes[0, 0].plot(epochs, self.train_history['train_loss'], label='Train Loss', linewidth=2)
+        axes[0, 0].plot(epochs, self.train_history['val_loss'], label='Val Loss', linewidth=2)
+        axes[0, 0].set_xlabel('Epoch')
+        axes[0, 0].set_ylabel('Loss')
+        axes[0, 0].set_title('Training & Validation Loss')
+        axes[0, 0].legend()
+        axes[0, 0].grid(True, alpha=0.3)
+        
+        # 2. PESQ Score
+        axes[0, 1].plot(epochs, self.train_history['pesq'], label='PESQ', color='green', linewidth=2)
+        axes[0, 1].set_xlabel('Epoch')
+        axes[0, 1].set_ylabel('PESQ Score')
+        axes[0, 1].set_title('PESQ Score over Epochs')
+        axes[0, 1].legend()
+        axes[0, 1].grid(True, alpha=0.3)
+        
+        # 3. Learning Rate
+        axes[1, 0].plot(epochs, self.train_history['lr'], label='Learning Rate', color='red', linewidth=2)
+        axes[1, 0].set_xlabel('Epoch')
+        axes[1, 0].set_ylabel('Learning Rate')
+        axes[1, 0].set_title('Learning Rate Schedule')
+        axes[1, 0].set_yscale('log')
+        axes[1, 0].legend()
+        axes[1, 0].grid(True, alpha=0.3)
+        
+        # 4. Loss Comparison (Zoomed)
+        # 只顯示後 80% 的 epochs 以便看清楚趨勢
+        start_idx = max(0, len(epochs) // 5)
+        axes[1, 1].plot(epochs[start_idx:], self.train_history['train_loss'][start_idx:], 
+                       label='Train Loss', linewidth=2)
+        axes[1, 1].plot(epochs[start_idx:], self.train_history['val_loss'][start_idx:], 
+                       label='Val Loss', linewidth=2)
+        axes[1, 1].set_xlabel('Epoch')
+        axes[1, 1].set_ylabel('Loss')
+        axes[1, 1].set_title('Loss Curves (Last 80% Epochs)')
+        axes[1, 1].legend()
+        axes[1, 1].grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        
+        # 保存圖表
+        plot_path = os.path.join(self.exp_path, 'training_curves.png')
+        plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+        print(f'\n✅ Training curves saved to: {plot_path}')
+        plt.close()
 
 
 
