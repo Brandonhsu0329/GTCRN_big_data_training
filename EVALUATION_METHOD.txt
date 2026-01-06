@@ -1,0 +1,237 @@
+================================================================================
+GTCRN 模型驗證評估方法詳解
+================================================================================
+
+【評估目標】
+評估訓練好的語音去噪模型在不同情況下的表現，包括：
+- Inside Test: 訓練時見過的說話者 (boy1)
+- Outside Test: 訓練時未見過的說話者 (boy3, girl3)
+
+================================================================================
+【評估流程】
+================================================================================
+
+───────────────────────────────────────────────────────────────────────────
+1. 資料準備
+───────────────────────────────────────────────────────────────────────────
+對每個測試組合：
+  - 乾淨語音（clean）：從 speech_lib/{speaker}/ 載入所有 .wav 檔案
+  - 噪音（noise）：從 speech_lib/noisex92_16k/ 載入指定噪音類型
+  - SNR 等級：[0, 5, 10, 15, 20] dB
+
+───────────────────────────────────────────────────────────────────────────
+2. 混合噪音（Noisy 生成）
+───────────────────────────────────────────────────────────────────────────
+步驟：
+1. 確保噪音長度 ≥ 乾淨語音長度（不夠則重複）
+2. 從噪音中隨機選取起始點，擷取與語音等長的片段
+3. 計算縮放因子：
+   - signal_power = mean(clean²)
+   - noise_power = mean(noise²)
+   - snr_linear = 10^(SNR_dB / 10)
+   - scale = sqrt(signal_power / (snr_linear × noise_power))
+4. 混合：noisy = clean + scale × noise
+
+程式碼範例：
+```python
+def add_noise(clean, noise, snr_db):
+    # 確保噪音夠長
+    if len(noise) < len(clean):
+        repeats = int(np.ceil(len(clean) / len(noise)))
+        noise = noise.repeat(repeats)
+    
+    # 隨機起點
+    if len(noise) > len(clean):
+        start = np.random.randint(0, len(noise) - len(clean))
+        noise = noise[start:start + len(clean)]
+    
+    # 計算縮放因子
+    signal_power = clean.pow(2).mean()
+    noise_power = noise.pow(2).mean()
+    snr_linear = 10 ** (snr_db / 10)
+    scale = torch.sqrt(signal_power / (snr_linear * noise_power + 1e-10))
+    
+    # 混合
+    noisy = clean + scale * noise
+    return noisy
+```
+
+───────────────────────────────────────────────────────────────────────────
+3. 模型去噪
+───────────────────────────────────────────────────────────────────────────
+步驟：
+1. 載入訓練好的 GTCRN 模型權重
+2. 將 noisy 音訊輸入模型
+3. 輸出 denoised（去噪後）音訊
+4. 不使用梯度計算（inference mode）
+
+程式碼範例：
+```python
+def denoise(model, noisy_waveform, device):
+    with torch.no_grad():
+        noisy_input = noisy_waveform.unsqueeze(0).to(device)
+        enhanced = model(noisy_input)
+        enhanced = enhanced.cpu().squeeze(0)
+    return enhanced
+```
+
+───────────────────────────────────────────────────────────────────────────
+4. 指標計算
+───────────────────────────────────────────────────────────────────────────
+計算兩組指標：
+
+【A. Noisy 指標】（混合噪音後 vs. 乾淨語音）
+- STOI (Short-Time Objective Intelligibility): 
+  語音可理解度，範圍 0-1，越高越好
+- PESQ (Perceptual Evaluation of Speech Quality): 
+  感知語音品質，範圍 -0.5 到 4.5，越高越好
+
+【B. Denoised 指標】（模型去噪後 vs. 乾淨語音）
+- STOI: 去噪後的可理解度
+- PESQ: 去噪後的語音品質
+
+程式碼範例：
+```python
+def calculate_metrics(clean, processed, sr=16000):
+    clean_np = clean.numpy()
+    processed_np = processed.numpy()
+    
+    # 確保長度相同
+    min_len = min(len(clean_np), len(processed_np))
+    clean_np = clean_np[:min_len]
+    processed_np = processed_np[:min_len]
+    
+    # STOI
+    stoi_score = stoi(clean_np, processed_np, sr, extended=False)
+    
+    # PESQ
+    pesq_score = pesq(sr, clean_np, processed_np, 'wb')
+    
+    return stoi_score, pesq_score
+
+# 對每組音訊計算
+noisy_stoi, noisy_pesq = calculate_metrics(clean, noisy)
+denoised_stoi, denoised_pesq = calculate_metrics(clean, denoised)
+```
+
+───────────────────────────────────────────────────────────────────────────
+5. 統計彙總
+───────────────────────────────────────────────────────────────────────────
+三個維度的統計：
+
+【1. 總平均（Total）】
+   - 所有測試樣本的平均 STOI 和 PESQ
+
+【2. 按 SNR 細分（By SNR）】
+   - 每個 SNR 等級（0, 5, 10, 15, 20 dB）的平均指標
+   - 可觀察不同噪音強度下的模型表現
+
+【3. 按噪音類型細分（By Noise）】
+   - 每種噪音（babble, f16, factory1, leopard, pink, volvo, white）
+     的平均指標
+   - 可觀察對不同噪音類型的魯棒性
+
+───────────────────────────────────────────────────────────────────────────
+6. 改善程度（Improvement）
+───────────────────────────────────────────────────────────────────────────
+STOI 改善 = denoised_stoi - noisy_stoi
+PESQ 改善 = denoised_pesq - noisy_pesq
+
+正值表示模型有效改善了語音品質
+
+================================================================================
+【評估配置範例】
+================================================================================
+
+Inside Test (訓練時見過):
+  - 說話者: boy1
+  - 噪音: [babble, f16, factory1, leopard, pink, volvo, white]
+  - SNR: [0, 5, 10, 15, 20] dB
+  - 語音檔案數: 320個
+  - 總測試數: 320 × 7噪音 × 5 SNR = 11,200 筆
+
+Outside Test 1 (訓練時未見過):
+  - 說話者: boy3
+  - 噪音: [babble, f16, factory1, factory2, leopard, pink, volvo, white]
+  - SNR: [0, 5, 10, 15, 20] dB
+  - 語音檔案數: 320個
+  - 總測試數: 320 × 8噪音 × 5 SNR = 12,800 筆
+
+Outside Test 2 (訓練時未見過):
+  - 說話者: girl3
+  - 噪音: [babble, f16, factory1, factory2, leopard, pink, volvo, white]
+  - 其他配置同 Outside Test 1
+
+================================================================================
+【關鍵特點】
+================================================================================
+
+1. 可重現性：
+   使用固定隨機種子（42 + 檔案索引×1000 + 噪音哈希 + SNR）
+
+2. 公平比較：
+   同一組 (乾淨語音, 噪音, SNR) 用於計算 noisy 和 denoised 指標
+
+3. 音訊保存：
+   保存指定句子的音檔（clean, noisy, denoised）供人耳檢查
+
+4. 多維度分析：
+   總平均、按 SNR、按噪音類型，全面評估模型性能
+
+================================================================================
+【結果解讀】
+================================================================================
+
+好的模型表現：
+✓ Denoised STOI > Noisy STOI（可理解度提升）
+✓ Denoised PESQ > Noisy PESQ（語音品質提升）
+✓ Inside 和 Outside 表現差距小（泛化能力好）
+✓ 低 SNR 時仍有顯著改善（魯棒性強）
+
+典型結果範例：
+┌─────────────┬──────────────┬──────────────┬──────────────┐
+│   指標      │   Noisy      │   Denoised   │    改善      │
+├─────────────┼──────────────┼──────────────┼──────────────┤
+│   STOI      │   0.8842     │   0.9181     │   +0.0339    │
+│   PESQ      │   1.5960     │   2.5043     │   +0.9083    │
+└─────────────┴──────────────┴──────────────┴──────────────┘
+
+按 SNR 細分範例：
+┌─────┬─────────────┬─────────────┬─────────────┬─────────────┐
+│ SNR │ Noisy STOI  │ Den STOI    │ Noisy PESQ  │ Den PESQ    │
+├─────┼─────────────┼─────────────┼─────────────┼─────────────┤
+│  0  │   0.7382    │   0.7988    │   1.1296    │   1.5284    │
+│  5  │   0.8358    │   0.8907    │   1.2618    │   1.9629    │
+│ 10  │   0.9095    │   0.9426    │   1.4822    │   2.4678    │
+│ 15  │   0.9563    │   0.9716    │   1.8175    │   3.0194    │
+│ 20  │   0.9811    │   0.9867    │   2.2890    │   3.5430    │
+└─────┴─────────────┴─────────────┴─────────────┴─────────────┘
+
+觀察重點：
+1. SNR 越低（噪音越強），改善幅度應該越大
+2. 各種噪音類型都應有正向改善
+3. Outside test 不應明顯差於 Inside test（避免過擬合）
+
+================================================================================
+【完整評估腳本位置】
+================================================================================
+
+腳本: /home/sbplab/yuchen/GTCRN/SEtrain/evaluate_gtcrn_full.py
+
+執行方式:
+python evaluate_gtcrn_full.py
+
+輸出位置:
+experiments/{實驗名稱}/evaluation_results/
+├── full_evaluation_results.json  (數值結果)
+├── inside_boy1/                   (Inside test 音檔)
+│   └── sentence_{n}/{noise}/snr_{s}/
+│       ├── clean.wav
+│       ├── noisy_input.wav
+│       └── denoised_output.wav
+├── outside_boy3/                  (Outside test 1 音檔)
+└── outside_girl3/                 (Outside test 2 音檔)
+
+================================================================================
+結束
+================================================================================

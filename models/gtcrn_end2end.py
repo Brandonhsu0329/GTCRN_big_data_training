@@ -291,8 +291,10 @@ class GTCRN(nn.Module):
 
         self.encoder = Encoder()
         
+        # Reduced from 2 layers to 1 layer to decrease model capacity
+        # Target: Lower PESQ from 2.50 to 2.15-2.30 for better knowledge distillation
         self.dpgrnn1 = DPGRNN(16, 33, 16)
-        self.dpgrnn2 = DPGRNN(16, 33, 16)
+        # self.dpgrnn2 = DPGRNN(16, 33, 16)  # REMOVED for weaker student
         
         self.decoder = Decoder()
 
@@ -324,7 +326,7 @@ class GTCRN(nn.Module):
         feat, en_outs = self.encoder(feat)
         
         feat = self.dpgrnn1(feat) # (B,16,T,33)
-        feat = self.dpgrnn2(feat) # (B,16,T,33)
+        # feat = self.dpgrnn2(feat) # (B,16,T,33)  # REMOVED for weaker student
 
         m_feat = self.decoder(feat, en_outs)
         
