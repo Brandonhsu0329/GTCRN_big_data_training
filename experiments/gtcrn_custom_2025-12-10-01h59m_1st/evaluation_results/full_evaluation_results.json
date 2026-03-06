@@ -1,0 +1,266 @@
+{
+  "Inside (boy1)": {
+    "total": {
+      "noisy_stoi": 0.8841815600085233,
+      "noisy_pesq": 1.5960010345493043,
+      "denoised_stoi": 0.9180655740788882,
+      "denoised_pesq": 2.504298823082021
+    },
+    "by_snr": {
+      "0": {
+        "noisy_stoi": 0.7381920888531994,
+        "noisy_pesq": 1.1295674002064127,
+        "denoised_stoi": 0.7987522686206786,
+        "denoised_pesq": 1.5284286219626666
+      },
+      "5": {
+        "noisy_stoi": 0.8357964472771218,
+        "noisy_pesq": 1.2617665843772037,
+        "denoised_stoi": 0.8907278838888092,
+        "denoised_pesq": 1.9629117360072477
+      },
+      "10": {
+        "noisy_stoi": 0.9095067273452377,
+        "noisy_pesq": 1.482151742971369,
+        "denoised_stoi": 0.9425977750200947,
+        "denoised_pesq": 2.4677986697959047
+      },
+      "15": {
+        "noisy_stoi": 0.956298200202802,
+        "noisy_pesq": 1.8175286787429026,
+        "denoised_stoi": 0.9715682692747772,
+        "denoised_pesq": 3.0194003319633858
+      },
+      "20": {
+        "noisy_stoi": 0.9811143363642557,
+        "noisy_pesq": 2.288990766448634,
+        "denoised_stoi": 0.9866816735900812,
+        "denoised_pesq": 3.542954755680902
+      }
+    },
+    "by_noise": {
+      "babble": {
+        "noisy_stoi": 0.8493590960051948,
+        "noisy_pesq": 1.4440834554284812,
+        "denoised_stoi": 0.8747434309608805,
+        "denoised_pesq": 2.054093650057912
+      },
+      "f16": {
+        "noisy_stoi": 0.852525337689886,
+        "noisy_pesq": 1.320930635482073,
+        "denoised_stoi": 0.9140906492654346,
+        "denoised_pesq": 2.3774385996162892
+      },
+      "factory1": {
+        "noisy_stoi": 0.8461671760803696,
+        "noisy_pesq": 1.3189644544571637,
+        "denoised_stoi": 0.885451176744963,
+        "denoised_pesq": 2.153635533004999
+      },
+      "leopard": {
+        "noisy_stoi": 0.9330878176427823,
+        "noisy_pesq": 1.7934028534591198,
+        "denoised_stoi": 0.9468262374238742,
+        "denoised_pesq": 2.548818956092
+      },
+      "pink": {
+        "noisy_stoi": 0.8576384633444895,
+        "noisy_pesq": 1.2407292913645507,
+        "denoised_stoi": 0.9060357643405953,
+        "denoised_pesq": 2.3492534831166267
+      },
+      "volvo": {
+        "noisy_stoi": 0.9902808745538622,
+        "noisy_pesq": 2.9361748126894236,
+        "denoised_stoi": 0.9914796866699628,
+        "denoised_pesq": 3.605189366787672
+      },
+      "white": {
+        "noisy_stoi": 0.8602121547430787,
+        "noisy_pesq": 1.1177217389643193,
+        "denoised_stoi": 0.9078320731465069,
+        "denoised_pesq": 2.44166217289865
+      }
+    }
+  },
+  "Outside (boy3)": {
+    "total": {
+      "noisy_stoi": 0.8904943789156703,
+      "noisy_pesq": 1.5304441246390343,
+      "denoised_stoi": 0.9228681880384397,
+      "denoised_pesq": 2.4472138516232373
+    },
+    "by_snr": {
+      "0": {
+        "noisy_stoi": 0.7586322613170833,
+        "noisy_pesq": 1.1136434481479227,
+        "denoised_stoi": 0.8155436691784317,
+        "denoised_pesq": 1.5538236499298363
+      },
+      "5": {
+        "noisy_stoi": 0.8466186736605404,
+        "noisy_pesq": 1.2259782044216991,
+        "denoised_stoi": 0.8976939297172347,
+        "denoised_pesq": 1.9423014952335507
+      },
+      "10": {
+        "noisy_stoi": 0.9127036382067679,
+        "noisy_pesq": 1.4295371318235994,
+        "denoised_stoi": 0.9448089302081376,
+        "denoised_pesq": 2.4243933541234584
+      },
+      "15": {
+        "noisy_stoi": 0.9553326283343175,
+        "noisy_pesq": 1.7338893877342343,
+        "denoised_stoi": 0.9709293910408612,
+        "denoised_pesq": 2.9293651637155564
+      },
+      "20": {
+        "noisy_stoi": 0.9791846930596421,
+        "noisy_pesq": 2.1491724510677157,
+        "denoised_stoi": 0.9853650200475335,
+        "denoised_pesq": 3.3861855951137843
+      }
+    },
+    "by_noise": {
+      "babble": {
+        "noisy_stoi": 0.8539925299690951,
+        "noisy_pesq": 1.4491836025565863,
+        "denoised_stoi": 0.875555256548821,
+        "denoised_pesq": 2.0470502414554357
+      },
+      "f16": {
+        "noisy_stoi": 0.8630979312817902,
+        "noisy_pesq": 1.2931371966004372,
+        "denoised_stoi": 0.9192921091782774,
+        "denoised_pesq": 2.3327888163924215
+      },
+      "factory1": {
+        "noisy_stoi": 0.8531131508700384,
+        "noisy_pesq": 1.2965657979249954,
+        "denoised_stoi": 0.8912664878201971,
+        "denoised_pesq": 2.135137845352292
+      },
+      "factory2": {
+        "noisy_stoi": 0.9033053979968193,
+        "noisy_pesq": 1.5508138708770276,
+        "denoised_stoi": 0.9299891388993063,
+        "denoised_pesq": 2.3932090978324414
+      },
+      "leopard": {
+        "noisy_stoi": 0.923560152765169,
+        "noisy_pesq": 1.6986475067585707,
+        "denoised_stoi": 0.9418544147961535,
+        "denoised_pesq": 2.514877709373832
+      },
+      "pink": {
+        "noisy_stoi": 0.8647901774860247,
+        "noisy_pesq": 1.2127226171642542,
+        "denoised_stoi": 0.9144501460267209,
+        "denoised_pesq": 2.309102595001459
+      },
+      "volvo": {
+        "noisy_stoi": 0.9863117551932049,
+        "noisy_pesq": 2.6254030092060567,
+        "denoised_stoi": 0.9892045492500452,
+        "denoised_pesq": 3.423361641764641
+      },
+      "white": {
+        "noisy_stoi": 0.8757839357632204,
+        "noisy_pesq": 1.1170793960243464,
+        "denoised_stoi": 0.9213334017879953,
+        "denoised_pesq": 2.4221828658133746
+      }
+    }
+  },
+  "Outside (girl3)": {
+    "total": {
+      "noisy_stoi": 0.8821314083581203,
+      "noisy_pesq": 1.4518550699856132,
+      "denoised_stoi": 0.9100130302311498,
+      "denoised_pesq": 2.3409818805847316
+    },
+    "by_snr": {
+      "0": {
+        "noisy_stoi": 0.7451504128433791,
+        "noisy_pesq": 1.0659358997363597,
+        "denoised_stoi": 0.7824635361035902,
+        "denoised_pesq": 1.4681185896974056
+      },
+      "5": {
+        "noisy_stoi": 0.836981093708073,
+        "noisy_pesq": 1.1436297219246625,
+        "denoised_stoi": 0.8813191302842341,
+        "denoised_pesq": 1.8215870197862387
+      },
+      "10": {
+        "noisy_stoi": 0.9048315149613174,
+        "noisy_pesq": 1.317915552156046,
+        "denoised_stoi": 0.9373186186546892,
+        "denoised_pesq": 2.2904094462282956
+      },
+      "15": {
+        "noisy_stoi": 0.948958398499195,
+        "noisy_pesq": 1.632181686256081,
+        "denoised_stoi": 0.9665673428158179,
+        "denoised_pesq": 2.817375955777243
+      },
+      "20": {
+        "noisy_stoi": 0.9747356217786368,
+        "noisy_pesq": 2.099612489854917,
+        "denoised_stoi": 0.9823965232974169,
+        "denoised_pesq": 3.3074183914344757
+      }
+    },
+    "by_noise": {
+      "babble": {
+        "noisy_stoi": 0.8448220624762726,
+        "noisy_pesq": 1.3825995714962482,
+        "denoised_stoi": 0.8558832375466117,
+        "denoised_pesq": 1.9788122404366733
+      },
+      "f16": {
+        "noisy_stoi": 0.8482622261032486,
+        "noisy_pesq": 1.2830714022368193,
+        "denoised_stoi": 0.9020467139305929,
+        "denoised_pesq": 2.2114712849259375
+      },
+      "factory1": {
+        "noisy_stoi": 0.8408067925037144,
+        "noisy_pesq": 1.2852199758589267,
+        "denoised_stoi": 0.8761480578350558,
+        "denoised_pesq": 2.04087337218225
+      },
+      "factory2": {
+        "noisy_stoi": 0.9012775228024023,
+        "noisy_pesq": 1.493573282957077,
+        "denoised_stoi": 0.9192663045595896,
+        "denoised_pesq": 2.3154877734929324
+      },
+      "leopard": {
+        "noisy_stoi": 0.923451435612093,
+        "noisy_pesq": 1.5097631508857012,
+        "denoised_stoi": 0.9338168644076756,
+        "denoised_pesq": 2.438917478322983
+      },
+      "pink": {
+        "noisy_stoi": 0.8523673859002966,
+        "noisy_pesq": 1.2190363370627164,
+        "denoised_stoi": 0.8983768416102587,
+        "denoised_pesq": 2.1687932807207106
+      },
+      "volvo": {
+        "noisy_stoi": 0.985072828286381,
+        "noisy_pesq": 2.3054694290459157,
+        "denoised_stoi": 0.9886490040337433,
+        "denoised_pesq": 3.2931233152002095
+      },
+      "white": {
+        "noisy_stoi": 0.860991013180554,
+        "noisy_pesq": 1.1361074103415012,
+        "denoised_stoi": 0.9059172179256703,
+        "denoised_pesq": 2.280376299396157
+      }
+    }
+  }
+}

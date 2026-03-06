@@ -1,0 +1,58 @@
+network_config:
+  n_fft: 512
+  hop_len: 256
+  win_len: 512
+DDP:
+  world_size: 1
+optimizer:
+  lr: 0.0005
+  weight_decay: 0.0001
+scheduler:
+  kwargs:
+    warmup_steps: 2000
+    decay_until_step: 50000
+    max_lr: 0.0005
+    min_lr: 1.0e-06
+  update_interval: step
+  use_plateau: false
+FFT:
+  n_fft: 512
+  hop_length: 256
+  win_length: 512
+loss:
+  n_fft: ${FFT.n_fft}
+  hop_len: ${FFT.hop_length}
+  win_len: ${FFT.win_length}
+  compress_factor: 0.3
+  eps: 1.0e-12
+  lamda_ri: 30
+  lamda_mag: 70
+train_dataset:
+  length_in_seconds: 2
+  num_data_tot: 1152
+  num_data_per_epoch: 1000
+  random_start_point: false
+  train: true
+train_dataloader:
+  batch_size: 16
+  num_workers: 4
+  drop_last: true
+  pin_memory: true
+validation_dataset:
+  length_in_seconds: 2
+  num_data_tot: 128
+  num_data_per_epoch: 128
+  random_start_point: false
+  train: false
+validation_dataloader:
+  batch_size: 16
+  num_workers: 4
+  pin_memory: true
+samplerate: 16000
+trainer:
+  epochs: 150
+  save_checkpoint_interval: 10
+  clip_grad_norm_value: 3.0
+  exp_path: experiments/gtcrn_weaker_student
+  resume: false
+  resume_datetime: 2025-12-15-01h30m
